@@ -1,0 +1,4 @@
+#add_flags(CMAKE_CXX_FLAGS "-wNoAlloyingSemicolonWarning -bla")
+#clear_flag(CMAKE_CXX_FLAGS "-wNoAlloyingSemicolonWarning")
+#clear_flag(CMAKE_CXX_FLAGS "-bla")
+#add_flags(CUDA_NVCC_FLAGS "--std=c++11")

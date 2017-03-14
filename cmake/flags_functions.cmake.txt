@@ -1,0 +1,60 @@
+#_______________CLEANUP_FLAGS___________________
+function(cleanup_flags OUT FLAGS) # cleans up spaces and dupicates, example: cleanup_flags(my_list_name ${stuff})
+	SET(FF "${${FLAGS}}") # copy list
+#	message("FLAGS = " "${FLAGS}")
+	if(FLAGS MATCHES "CUDA_NVCC_FLAGS") # cuda replace long names with short names
+#		message("MATCHES")
+		string (REGEX REPLACE "--std" "-std" FF "${FF}")
+		string (REGEX REPLACE "--shares" "-shared" FF "${FF}")
+		string (REGEX REPLACE "--expt-extended-lambda" "-expt-extended-lambda" FF "${FF}")
+	endif()
+	string (REGEX REPLACE "[  ]" " " FF "${FF}")
+	string (REGEX REPLACE "-Xcompiler " "-Xcompiler#" FF "${FF}")
+	string (REGEX REPLACE "-Xlinker " "-Xlinker#" FF "${FF}")
+	string (REGEX REPLACE "-Xptxas " "-Xptxas#" FF "${FF}")
+	string (REGEX REPLACE "-Xnvlink " "-Xnvlink#" FF "${FF}")
+	string (REGEX REPLACE "-Xarchive " "-Xarchive#" FF "${FF}")
+	string (REGEX REPLACE " " ";" FF "${FF}")
+	list(REMOVE_DUPLICATES FF)
+	string (REGEX REPLACE "-Xcompiler#" "-Xcompiler=" FF "${FF}")
+	string (REGEX REPLACE "-Xlinker#" "-Xlinker=" FF "${FF}")
+	string (REGEX REPLACE "-Xptxas#" "-Xptxas=" FF "${FF}")
+	string (REGEX REPLACE "-Xnvlink#" "-Xnvlink=" FF "${FF}")
+	string (REGEX REPLACE "-Xarchive#" "-Xarchive=" FF "${FF}")
+#       string (REGEX REPLACE ";" " " FF "${FF}")
+#        message(STATUS "    FF = ${FF}")
+	set(${OUT} ${FF} PARENT_SCOPE)
+endfunction()
+
+
+#_______________CLEAR_FLAG___________________
+function(clear_flag FLAGS FLAG) # example: clear_flag(CUDA_NVCC_FLAGS, "-src-in-ptx")
+#       message(STATUS "${FLAGS}, clearing : ${FLAG}")
+        cleanup_flags(FF ${FLAGS})
+        cleanup_flags(F FLAG)
+        list(REMOVE_ITEM FF ${F})
+#       message(STATUS "    ${FLAGS} = ${FF}")
+        if(NOT FLAGS MATCHES "CUDA_NVCC_FLAGS") # fix for cuda linker
+                #string (REGEX REPLACE " " ";" FF "${FF}")
+                string (REGEX REPLACE ";" " " FF "${FF}")
+        endif()
+        #string (REGEX REPLACE ";" " " FF "${FF}")
+
+        set(${FLAGS} ${FF} PARENT_SCOPE)
+endfunction()
+
+#_______________ADD_FLAG___________________
+function(add_flags FLAGS FLAG) # example: add_flags(CUDA_NVCC_FLAGS, "-src-in-ptx")
+#       message(STATUS "${FLAGS}, adding : ${FLAG}")
+        cleanup_flags(FF ${FLAGS})
+        cleanup_flags(F FLAG)
+        list(APPEND FF ${F})
+        cleanup_flags(FF FF)
+#       message(STATUS "    ${FLAGS} = ${FF}")
+        if(NOT FLAGS MATCHES "CUDA_NVCC_FLAGS") # fix for cuda linker
+                #string (REGEX REPLACE " " ";" FF "${FF}")
+                string (REGEX REPLACE ";" " " FF "${FF}")
+        endif()
+        #string (REGEX REPLACE ";" " " FF "${FF}")
+        set(${FLAGS} ${FF} PARENT_SCOPE)
+endfunction()
