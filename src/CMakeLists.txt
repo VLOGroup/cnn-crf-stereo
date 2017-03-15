@@ -58,6 +58,10 @@ SET(EXTERN_LIBS ${EXTERN_LIBS} ${SlackProp_DIR}/lib/libslack_prop.so)
 # -----------------------------------------------------------------------------
 SET(EXTERN_LIBS ${EXTERN_LIBS} cnpy)
 
+##-----------------------------------------------------------------------------
+## Boost
+find_package(Boost COMPONENTS program_options filesystem system REQUIRED)
+
 # CUDA related stuff
 # -----------------------------------------------------------------------------
 #FIND_PACKAGE(CUDA REQUIRED)
@@ -80,7 +84,6 @@ SET(CUDA_LIBRARIES ${CUDA_LIBRARIES} cudnn)
 
 
 SET(SOURCES
-	#main.cpp
 	stereonet.cpp
 	graystereonet.cpp
 	colorstereonet.cpp
@@ -115,15 +118,32 @@ SET(HEADERS
 	operators/slackprop.h
 )
 
+SET (SRC_STEREO_LIB
+  stereo.h
+  stereo.cpp
+  stereo.cu
+  stereo.cuh
+
+  tools.h
+  tools.cpp
+)
+
+SET ( SRC_STEREO_IMG
+  stereo_img.cpp
+)
 
 ###############################################################################
 # Specify what and how to build
 ###############################################################################
-CUDA_ADD_LIBRARY(cudnn_stereo SHARED ${HEADERS} ${SOURCES}) # build a shared cuda lib called test
-TARGET_LINK_LIBRARIES(cudnn_stereo ${CUDA_LIBRARIES} ${EXTERN_LIBS} cnpy) # link libs to target test
+CUDA_ADD_LIBRARY(cudnn_stereo SHARED ${HEADERS} ${SOURCES}) 
+TARGET_LINK_LIBRARIES(cudnn_stereo ${CUDA_LIBRARIES} ${EXTERN_LIBS} cnpy) 
 
-CUDA_ADD_EXECUTABLE(main main.cpp)
-TARGET_LINK_LIBRARIES(main cudnn_stereo)
+cuda_add_library(stereo SHARED ${SRC_STEREO_LIB})
+TARGET_LINK_LIBRARIES(stereo ${IMAGEUTILITIES_LIBRARIES} ${LIBS}
+${OpenCV_LIBRARIES} ${OpenCV_LIBS} cudnn_stereo ${SLACK_PROP_LIBRARY} ${ITK_LIBRARIES} cnpy png)
+
+cuda_add_executable( stereo_img ${SRC_STEREO_IMG})
+TARGET_LINK_LIBRARIES(stereo_img  stereo ${IMAGEUTILITIES_LIBRARIES} ${Boost_LIBRARIES})
 
 MESSAGE("link dirs ${EXTERN_LIBS}")
 
