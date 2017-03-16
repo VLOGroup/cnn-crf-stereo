@@ -51,7 +51,8 @@ except:
   L1=0
   L2=0
   delta=0
-#sys.exit(0)
+  print 'Could not find L1 or L2 or delta -> exit!'
+  sys.exit(0)
 
 # create npz file from parameters
 pkl_names = glob.glob(cnn_params_folder+'/*.pkl')
@@ -74,6 +75,7 @@ for image in images_names:
     print os.path.basename(image)
     left = image+'/im0.png'
     right = image+'/im1.png'
+    #right = image+'/im1_undistorted.png'
     # read out ndisp from calib.txt
     calibfile = open(os.path.realpath(image) + '/calib.txt','r')
     for line in calibfile:
@@ -96,6 +98,7 @@ for image in images_names:
 
 
     #CNN + CRF output
+    #print 'DO IT: -------------------------------------------------- delta =', np.ceil(delta * disp_step), 'delta=', delta, 'disp_step=', disp_step
     timed_executable = '/usr/bin/time -f ''%e'' -o '+image+'/timeJMR.txt '+executable
     args = [executable,left,right,
             '--config-file '+config_file,
@@ -105,10 +108,9 @@ for image in images_names:
             '--parameter-file', cnn_params_file,
 #            '--refinement','QuadDirect'
 
-            # H TRAINED
             '--L1 ' + str(L1 / 2.0 * disp_step),
             '--L2 ' + str(L2 * 2.0 * disp_step),
-            '--delta ' + str(np.ceil(delta * disp_step))
+            '--delta ' + str(np.ceil(delta))
 
             ]
 
