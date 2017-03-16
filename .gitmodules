@@ -1,6 +1,3 @@
 [submodule "dependencies/cnpy"]
 	path = dependencies/cnpy
 	url = https://github.com/rogersce/cnpy.git
-[submodule "dependencies/imageutilities"]
-	path = dependencies/imageutilities
-	url = https://github.com/VLOGroup/imageutilities.git
