@@ -12,6 +12,8 @@ import subprocess
 import re
 import numpy as np
 import pickle
+import StringIO
+import ConfigParser
 
 if len(sys.argv) != 6:
     print 'Usage: python run_middlebury.py <image_folder> <executable_dir> <config_file> <cnn_params_folder> <output_filename (no path or extension)>'
@@ -35,7 +37,22 @@ config_file = cnn_params_folder+'/'+config_file
 if not os.path.isfile(config_file):
   print 'Config file not found!'
   sys.exit(-2)
-  
+
+# parse config file
+ini_str = '[root]\n' + open(config_file, 'r').read()
+ini_fp = StringIO.StringIO(ini_str)
+config = ConfigParser.RawConfigParser()
+config.readfp(ini_fp)
+try:
+  L1 = float(config.get('root', 'L1'))
+  L2 = float(config.get('root', 'L2'))
+  delta = float(config.get('root', 'delta'))
+except:
+  L1=0
+  L2=0
+  delta=0
+#sys.exit(0)
+
 # create npz file from parameters
 pkl_names = glob.glob(cnn_params_folder+'/*.pkl')
 print 'Using', pkl_names[0]
@@ -71,21 +88,27 @@ for image in images_names:
     num_disps = np.power(2.0,bits)
     #max_disp = np.minimum(max_disp,num_disps)
     print 'Num. Disparities: ' + str(max_disp) + ' in ' + str(num_disps) + ' steps'
+
     if max_disp / num_disps > 1:
-        disp_step = 2
-        #disp_step = max_disp / num_disps
+        disp_step = max_disp / num_disps
     else:
-        disp_step = 1#max_disp / num_disps
+        disp_step = max_disp / num_disps
+
 
     #CNN + CRF output
     timed_executable = '/usr/bin/time -f ''%e'' -o '+image+'/timeJMR.txt '+executable
-    args = [timed_executable,left,right,
+    args = [executable,left,right,
             '--config-file '+config_file,
             '--output-file '+os.path.realpath(image)+'/'+output_filename,
             '--disp-step '+str(disp_step),
             '--disp-max ' + str(max_disp),
-            '--parameter-file', cnn_params_file
+            '--parameter-file', cnn_params_file,
 #            '--refinement','QuadDirect'
+
+            # H TRAINED
+            '--L1 ' + str(L1 / 2.0 * disp_step),
+            '--L2 ' + str(L2 * 2.0 * disp_step),
+            '--delta ' + str(np.ceil(delta * disp_step))
 
             ]
 

@@ -1,0 +1,3 @@
+cnn: /home/patrick/sshfs/repos/stereo-learning/output/01_train_unaries/MB/all_data/7_Color_ms/cont/params
+cnn_crf: /home/patrick/sshfs_christian/stereo-learning/output/02_train_joint/7_zm_std/params
+cnn+crf+pw: /home/patrick/PhD/development/git/stereo-learning/output/03_train_pairwise/MB_7_vgg4-th_PAIRWISE_INIT

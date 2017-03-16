@@ -43,7 +43,8 @@ print 'Using', pkl_names[0]
 with open(pkl_names[0],'r') as pkl_file:
     params = pickle.load(pkl_file)
 cnn_params_file = 'params'
-os.remove(cnn_params_file+'.npz')
+if os.path.exists(cnn_params_file+'.npz'):
+    os.remove(cnn_params_file+'.npz')
 with open(cnn_params_file+'.npz','w') as f:
     np.savez(f, *params)
 
@@ -62,7 +63,8 @@ for image0, image1, imageid in zip(image0_names,image1_names,np.arange(1,195)):
     args = [executable,image0,image1,'--config-file',config_file,
                                      '--output-file',output_dir+'/'+os.path.splitext(os.path.basename(image0))[0],
                                      '--parameter-file', cnn_params_file,
-                                     '--refinement','QuadDirect']
+                                     #'--refinement','QuadDirect'
+                                     ]
     retval = subprocess.call(' '.join(args),shell=True,cwd=os.getcwd())
     if imageid==num_images:
         break

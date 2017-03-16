@@ -1,0 +1,4 @@
+cnn: /home/patrick/sshfs_christian/stereo-learning/output/01_train_unaries/Middlebury/3_zm_std_new_001/cont/cont/params 1007
+cnn_crf: /home/patrick/sshfs_christian/stereo-learning/output/02_train_joint/3_zm_std/params
+cnn_crf_pw: /home/patrick/PhD/development/git/stereo-learning/output/03_train_pairwise/MB3_trun_3_g2/params
+cnn+crf full: /home/patrick/PhD/development/git/stereo-learning/output/04_full_joint_VGG/MB_3_unaryies/params
