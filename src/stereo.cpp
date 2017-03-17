@@ -23,9 +23,7 @@
 #include <cstdio>
 #include <iu/iuio.h>
 
-#include "graystereonet.h"
 #include "colorstereonet.h"
-#include "concatstereonet.h"
 
 Stereo::Stereo():img1(0),img2(0),costvolume_(0),wx(0),wy(0),out(0),
 p(0),matching_function_(CENSUS),solver(0), num_cnn_layers_(3),stereoNet(NULL),verbose_(false)
@@ -248,45 +246,12 @@ void Stereo::computeVolume(bool lr)
 				}
                 stereoNet->setVerbose(verbose_);
 			}
-			else if(matching_function_ == CONCATCNN || matching_function_ == CONCATCNN_PAIRWISE)
-			{
-				stereoNet = new ConcatStereoNet(num_cnn_layers_, 1, 3, I1_padded_color->height(), I1_padded_color->width());
-				if(matching_function_ == CONCATCNN)
-					stereoNet->initNet(disp_min_, disp_max_, disp_step_,rect_corr, d_stereoNetMatchingOutput);
-				else
-					stereoNet->initNet(disp_min_, disp_max_, disp_step_,rect_corr, d_stereoNetMatchingOutput, d_pairwiseOut);
-			}
-
 			else
 			{
 				std::cout << "unknown or not implemented matching function" << std::endl;
 				exit(-1);
 			}
 
-		}
-		else if(matching_function_ == GRAYCNN || matching_function_ == GRAYCNN_PAIRWISE)
-		{
-			if(padval > 0)
-			{
-				I1_padded = new iu::ImageGpu_32f_C1(img1->width()+2*padval,img1->height()+2*padval);
-				I2_padded = new iu::ImageGpu_32f_C1(img1->width()+2*padval,img1->height()+2*padval);
-			}
-			else
-			{
-				I1_padded = img1;
-				I2_padded = img2;
-			}
-
-
-			stereoNet = new GrayStereoNet(num_cnn_layers_, 1, 1, I1_padded->height(), I1_padded->width());
-			if(matching_function_ == GRAYCNN)
-			{
-                stereoNet->initNet(disp_min_, disp_max_, disp_step_,rect_corr, d_stereoNetMatchingOutput);
-			}
-			else if(matching_function_ == GRAYCNN_PAIRWISE)
-			{
-				stereoNet->initNet(disp_min_, disp_max_, disp_step_,rect_corr, d_stereoNetMatchingOutput, d_pairwiseOut);
-			}
 		}
 
 		// set params to any constructed cnn
@@ -310,12 +275,15 @@ void Stereo::computeVolume(bool lr)
         	stereoNet->setDisparities(disp_min_,disp_max_, disp_step_, d_stereoNetMatchingOutput);
         	if(matching_function_ == COLORCNN || matching_function_ == CONCATCNN || matching_function_ == COLORCNN_PAIRWISE)
         	{
-        		cuda::calccostvolumeColorCNN(img1_color, I1_padded_color, img2_color, I2_padded_color, stereoNet, padval);
+                ColorStereoNet *colorStereoNet = dynamic_cast<ColorStereoNet*>(stereoNet);
+                if(colorStereoNet != NULL)
+                    cuda::calccostvolumeColorCNN(img1_color, I1_padded_color, img2_color, I2_padded_color, colorStereoNet, padval);
+                else
+                {
+                    std::cout << "Error: Failed to convert to ColorStereoNet!" << std::endl;
+                    exit(-1);
+                }
         	}
-        	else
-			{
-        		cuda::calccostvolumeCNN(img1, I1_padded, img2, I2_padded, stereoNet, padval);
-			}
         }
     }
     else  // match from right to left
@@ -333,13 +301,14 @@ void Stereo::computeVolume(bool lr)
         	stereoNet->setDisparities(-disp_max_, -disp_min_, disp_step_, d_stereoNetMatchingOutput);
         	if(matching_function_ == COLORCNN || matching_function_ == CONCATCNN || matching_function_ == COLORCNN_PAIRWISE)
         	{
-        		cuda::calccostvolumeColorCNN(img2_color, I2_padded_color, img1_color, I1_padded_color, stereoNet, padval);
-
-        	}
-        	else
-        	{
-        		cuda::calccostvolumeCNN(img2, I2_padded, this->img1, I1_padded, stereoNet, padval);
-
+                ColorStereoNet *colorStereoNet = dynamic_cast<ColorStereoNet*>(stereoNet);
+                if(colorStereoNet != NULL)
+                    cuda::calccostvolumeColorCNN(img2_color, I2_padded_color, img1_color, I1_padded_color, colorStereoNet, padval);
+                else
+                {
+                    std::cout << "Error: Failed to convert to ColorStereoNet!" << std::endl;
+                    exit(-1);
+                }
         	}
         }
     }
@@ -397,7 +366,7 @@ bool Stereo::loadVolumeFromFile(std::string filename)
     iu::LinearHostMemory_32f_C1 costvolume_cpu(depth_*width_*height_);
     std::FILE* f=std::fopen(filename.c_str(),"rb");
     if(f) {
-        std::fread(costvolume_cpu.data(),sizeof(float),costvolume_cpu.numel(),f);
+        size_t a = std::fread(costvolume_cpu.data(),sizeof(float),costvolume_cpu.numel(),f);
         std::fclose(f);
         iu::copy(&costvolume_cpu,costvolume_);
         saveMatPython2("test.npy",costvolume_, width_, height_, depth_);
@@ -417,9 +386,19 @@ void Stereo::setDisparityRange(float disp_min,float disp_step, float disp_max)
 void Stereo::fuseTHuberQuadFit(float lambda_reg, float C, int iterations, int warps)
 {
     if(matching_function_ == COLORCNN || matching_function_ == CONCATCNN || matching_function_ == COLORCNN_PAIRWISE)
-        cuda::fuseTHuberQuadFit(out,out_,out0,img1_color,img2_color,I2_warped_color,wx,wy,qf,p,q,I1_padded_color,I2_padded_color,padval,stereoNet,1.f/lambda_reg,C,disp_step_,iterations,warps);
-    else
-        cuda::fuseTHuberQuadFit(out,out_,out0,img1,img2,do_inpainting?occlusion_mask:NULL,wx,wy,qf,p,q,I1_padded,I2_padded,padval,stereoNet,filter_size_*(matching_function_==CENSUS),1.f/lambda_reg,C,disp_step_,iterations,warps);
+    {
+        ColorStereoNet *colorStereoNet = dynamic_cast<ColorStereoNet*>(stereoNet);
+        if(colorStereoNet != NULL)
+        {
+            cuda::fuseTHuberQuadFit(out,out_,out0,img1_color,img2_color,I2_warped_color,wx,wy,qf,p,q,I1_padded_color,I2_padded_color,padval,colorStereoNet,1.f/lambda_reg,C,disp_step_,iterations,warps);
+        }
+        else
+        {
+            std::cout << "Error: Failed to convert to ColorStereoNet!" << std::endl;
+            exit(-1);
+        }
+
+    }
 }
 
 void Stereo::fuseQuadFitDirect(void)
