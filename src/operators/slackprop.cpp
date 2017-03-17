@@ -68,43 +68,11 @@ float SlackProp::forward(iu::TensorGpu_32f * costVolume , iu::TensorGpu_32f * pw
 	runtime_check(D1 == sols.size(0));
 	runtime_check(D2 == sols.size(1));
 
-//	std::cout <<"Cs=" << Cs<<"\n";
-//	std::cout <<"W_in="<< W_in<<"\n";
-//	std::cout <<"sols="<< sols<<"\n";
-
 	ndarray<float,4> W;
 	W.create<memory::GPU>({pw_channels, D1, D2, 2});
 
-	/*
-	for(int i = 0; i <  pw_channels*2; ++i){
-		//int d = i % 2;
-		int d = 1 - (i % 2);
-		int c = i / 2;
-	//	W [channels x image_size0 x image_size1 x n_dirs]
-		if(c== 0){
-			W.subdim<0,3>(c,d) << W_in.subdim<0>(i);
-		}else{// c = 1
-			( W.subdim<0,3>(c,d) << W_in.subdim<0>(i) ) -=  ;
-		};
-	};
-	*/
-
 	//! rearrange W_in as [(P1,P2) x D1 x D2 x (x,y)]
 	W << W_in.reshape(2, pw_channels, D1, D2).flip_dim(1).permute_dims({1,2,3,0});
-
-	/*
-	slack_prop_ops ops;
-
-	for(int d =0; d <2; ++d){
-		auto P1 = W_in.subdim<0>(d);
-		auto P2 = W_in.subdim<0>(d + 2);
-
-		W.subdim<0,3>(0,1-d) << P1;
-		//((W.subdim<0,3>(1,1-d) << P2) -= P1)*=(1.0f/(alg.ops.delta-1));
-		float c = 1.0f/(ops.delta-1);
-		madd2(W.subdim<0,3>(1,1-d), P1, P2, -c, c);
-	};
-	*/
 
 	ndarray_ref<int,2> sols_i = sols.recast<int>();
 

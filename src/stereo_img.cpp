@@ -124,9 +124,6 @@ int main(int argc, char *argv[])
 	stereo.initialize(I1->size(), min_disp, disp_step, max_disp);
     stereo.setVerbose(false);
 
-    iu::imsave(I1, "/tmp/out.png");
-    iu::imsave(I2, "/tmp/out1.png");
-
     switch(str2int(vm["matching"].as<std::string>().c_str()))
     {
         case str2int("COLORCNN"):

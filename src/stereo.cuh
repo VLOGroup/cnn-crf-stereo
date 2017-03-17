@@ -2,14 +2,11 @@
 #define STEREO_CUH
 
 #include <cuda_runtime.h>
-//#include <cutil_inline.h>
-//#include <cutil_math.h>
 #include "iu/iucore.h"
 #include "iu/iucutil.h"
 #include "iu/ndarray/ndarray.h"
 #include "iu/ndarray/ndarray_iu.h"
-//#include "iumath.h"
-class GrayStereoNet;
+
 class ColorStereoNet;
 
 namespace cuda {
@@ -17,8 +14,6 @@ namespace cuda {
                         float lambda, int filter_size, float disp_min, float disp_step, float disp_max,
                         iu::LinearDeviceMemory_32f_C1* costvolume, cudaStream_t stream);
 
-    iu::TensorGpu_32f *calccostvolumeCNN(iu::ImageGpu_32f_C1 *I1, iu::ImageGpu_32f_C1 *I1_padded, iu::ImageGpu_32f_C1 *I2, iu::ImageGpu_32f_C1 *I2_padded,
-    		GrayStereoNet *stereoNet, int padval);
     iu::TensorGpu_32f *calccostvolumeColorCNN(iu::ImageGpu_32f_C4 *I1, iu::ImageGpu_32f_C4 *I1_padded, iu::ImageGpu_32f_C4 *I2, iu::ImageGpu_32f_C4 *I2_padded,
         		ColorStereoNet *stereoNet, int padval);
     void destroyCNN(void);
@@ -35,10 +30,6 @@ namespace cuda {
     void fuseTHuberQuadFit(iu::ImageGpu_32f_C1* u, iu::ImageGpu_32f_C1 *u_, iu::ImageGpu_32f_C1 *u0, iu::ImageGpu_32f_C4 *I1, iu::ImageGpu_32f_C4 *I2, iu::ImageGpu_32f_C4 *I2_warped,
                           iu::ImageGpu_32f_C1* wx_gpu, iu::ImageGpu_32f_C1* wy_gpu, iu::ImageGpu_32f_C2 *qf,  iu::ImageGpu_32f_C2 *p, iu::ImageGpu_32f_C2 *q,
                           iu::ImageGpu_32f_C4 *I1_padded, iu::ImageGpu_32f_C4 *I2_padded, int padval, ColorStereoNet *stereoNet, float lambda_census, float C, float disp_step, int iterations, int warps);
-    void fuseTHuberQuadFit(iu::ImageGpu_32f_C1* u, iu::ImageGpu_32f_C1 *u_, iu::ImageGpu_32f_C1 *u0, iu::ImageGpu_32f_C1 *I1, iu::ImageGpu_32f_C1 *I2, iu::ImageGpu_8u_C1 *occlusion_mask,
-                          iu::ImageGpu_32f_C1* wx_gpu, iu::ImageGpu_32f_C1* wy_gpu, iu::ImageGpu_32f_C2 *qf,  iu::ImageGpu_32f_C2 *p, iu::ImageGpu_32f_C2 *q,
-                          iu::ImageGpu_32f_C1 *I1_padded, iu::ImageGpu_32f_C1 *I2_padded, int padval, GrayStereoNet *stereoNet,
-                          int filter_size, float lambda_census, float C, float disp_step, int iterations, int warps);
 
     void fuseQuadFitDirect(iu::ImageGpu_32f_C1* u, const ndarray_ref<float,3> &costvolume,
                            iu::ImageGpu_32f_C2* qf, float disp_min, float disp_step);

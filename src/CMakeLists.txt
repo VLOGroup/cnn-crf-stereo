@@ -85,9 +85,7 @@ SET(CUDA_LIBRARIES ${CUDA_LIBRARIES} cudnn)
 
 SET(SOURCES
 	stereonet.cpp
-	graystereonet.cpp
 	colorstereonet.cpp
-	concatstereonet.cpp
 	utils.cpp
 	utils.cu
 	operators/operator.cpp
@@ -102,9 +100,7 @@ SET(SOURCES
 
 SET(HEADERS
 	stereonet.h
-	graystereonet.h
 	colorstereonet.h
-	concatstereonet.h
 	error_util.h
 	utils.h
 	utils.cuh

@@ -1,9 +1,6 @@
-//#include <cuda.h>
 #include "iu/iucore.h"
-
 #include "iu/ndarray/ndarray_ref.host.h"
 #define divup(x,y) ((x-1)/(y)+1)
-//#include "utils.h"
 
 // get y for position x
 __device__ float dLinearInterpolation1D(float x, float x0, float x1, float y0, float y1)
@@ -14,7 +11,6 @@ __device__ float dLinearInterpolation1D(float x, float x0, float x1, float y0, f
 /*************************************************************************************************/
 /* FORWARD Kernes                                                                                */
 /*************************************************************************************************/
-// 0.84s
 __global__ void kCorrelation_NHWC_interpolation(iu::TensorGpu_32f::TensorKernelData outNHWC,
 		iu::TensorGpu_32f::TensorKernelData im0, iu::TensorGpu_32f::TensorKernelData im1,
 		iu::LinearDeviceMemory_32f_C1::KernelData disparities)
@@ -90,13 +86,9 @@ __global__ void kCorrelation_NHWC_interpolation(iu::TensorGpu_32f::TensorKernelD
 			// uniform distribution if outside the image
 			outNHWC(n, h, w, d) = 0.0;//1.0 / outNHWC.C;
 		}
-
-
 	}
-
 }
 
-// 0.61s
 __global__ void kCorrelation_NHWC(iu::TensorGpu_32f::TensorKernelData outNHWC,
 		iu::TensorGpu_32f::TensorKernelData im0, iu::TensorGpu_32f::TensorKernelData im1,
 		iu::LinearDeviceMemory_32f_C1::KernelData disparities, int rectCorr)
@@ -271,18 +263,6 @@ __device__ float parallelReductionSum(float value, volatile float *shared_buffer
 	shared_buffer[linId] = value;
 	__syncthreads();
 
-//	if(linId == 0)
-//	{
-//		float res = 0.0f;
-//		for(int i = 0; i < blockDim.x; ++i)
-//			res += shared_buffer[i];
-//
-//		return res;
-//	}
-//	else
-//		return -10000;
-
-
 
 	if(blockDim.x > 128 && linId + 128 < blockDim.x)
 	{
@@ -348,28 +328,6 @@ __global__ void kCorrelationGrad_NHWC_shared(iu::TensorGpu_32f::TensorKernelData
 	res = parallelReductionSum(grad1, buffer, d);
 	if(d == 0)
 		outGrad1(0, c, h, w) = res;
-
-//	// writing to these intermediate variables is twice as fast as summing up in global memory
-//	float grad0 = 0.0f;
-//	float grad1 = 0.0f;
-//	for (int d = 0; d < inGrad.C; ++d)
-//	{
-//		if ((w + disparities(d)) >= 0 && (w + disparities(d)) < outGrad0.W)
-//		{
-//			grad0 += im1(n, c, h, w + disparities(d)) * inGrad(n, h, w, d);
-//		}
-//	}
-//
-//	for (int d = 0; d < inGrad.C; ++d)
-//	{
-//		if ((w - disparities(d)) >= 0 && (w - disparities(d)) < outGrad0.W)
-//		{
-//			grad1 += im0(n, c, h, w - disparities(d)) * inGrad(n, h, w - disparities(d), d);
-//		}
-//	}
-//
-//
-//	outGrad1(n, c, h, w) = grad1;
 }
 
 /*************************************************************************************************/
@@ -423,7 +381,7 @@ void forward(iu::TensorGpu_32f &d_out, iu::TensorGpu_32f &d_inLeft, iu::TensorGp
 		}
 	}
 	else
-	std::cout << "[StereoCorrelation] no cuda code called" << std::endl;
+        std::cout << "[StereoCorrelation] no cuda code called" << std::endl;
 
 	cudaDeviceSynchronize();
 
@@ -461,14 +419,9 @@ void backward(float *d_outGrad0, float *d_outGrad1, float *d_inGrad, float *d_im
 		float *d_disparities, int in, int ic, int ih, int iw, int numDisps,
 		iu::TensorGpu_32f::MemoryLayout memoryLayout)
 {
-//	iu::IuCudaTimer cut;
-//	cut.start();
-
-
 	iu::TensorGpu_32f d_inIm0(d_im0, in, ic, ih, iw, true, iu::TensorGpu_32f::NCHW);
 	iu::TensorGpu_32f d_inIm1(d_im1, in, ic, ih, iw, true, iu::TensorGpu_32f::NCHW);
 
-	//iu::TensorGpu_32f d_inGradient(d_inGrad, in, numDisps, ih, iw, true, iu::TensorGpu_32f::NCHW);
 	iu::TensorGpu_32f d_inGradient(d_inGrad, in, numDisps, ih, iw, true, memoryLayout);
 	iu::TensorGpu_32f d_outGradient0(d_outGrad0, in, ic, ih, iw, true, iu::TensorGpu_32f::NCHW);
 	iu::TensorGpu_32f d_outGradient1(d_outGrad1, in, ic, ih, iw, true, iu::TensorGpu_32f::NCHW);
@@ -481,12 +434,9 @@ void backward(float *d_outGrad0, float *d_outGrad1, float *d_inGrad, float *d_im
 	if (d_inGradient.memoryLayout() == iu::TensorGpu_32f::NCHW)
 	{
 		kCorrelationGrad_NCHW<<<numBlocks, threadsPerBlock>>>(d_outGradient0, d_outGradient1, d_inGradient, d_inIm0, d_inIm1, d_disps);
-//		std::cout << "Call kCorrelationGrad_NCHW" << std::endl;
 	}
 	else if(d_inGradient.memoryLayout() == iu::TensorGpu_32f::NHWC)
 	{
-//			iu::IuCudaTimer cut;
-//			cut.start();
 #if 0
 			kCorrelationGrad_NHWC<<<numBlocks, threadsPerBlock>>>(d_outGradient0, d_outGradient1, d_inGradient, d_inIm0, d_inIm1, d_disps);
 			std::cout << cut.elapsed() << std::endl;
@@ -497,15 +447,11 @@ void backward(float *d_outGrad0, float *d_outGrad1, float *d_inGrad, float *d_im
 			dim3 numBlocks_shared(iw, ih, ic);
 			kCorrelationGrad_NHWC_shared<<<numBlocks_shared, threadsPerBlock_shared, numDisps * sizeof(float)>>>(d_outGradient0, d_outGradient1, d_inGradient, d_inIm0, d_inIm1, d_disps);
 #endif
-			//std::cout << cut.elapsed() << std::endl;
-//		std::cout << "Call kCorrelationGrad_NHWC" << std::endl;
 	}
 	else
 		std::cout << "[StereoCorrelation] no cuda backward code called" << std::endl;
 
 	cudaDeviceSynchronize();
-
-//	std::cout << cut.elapsed() << std::endl;
 }
 
 }

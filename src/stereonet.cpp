@@ -12,8 +12,6 @@
 #include "operators/bias.h"
 #include "operators/slackprop.h"
 
-#include "concatstereonet.h"
-
 #include <iu/iumath.h>
 
 StereoNet::StereoNet(unsigned int numLayers, unsigned int in, unsigned int ic, unsigned int ih, unsigned int iw) :
@@ -281,19 +279,6 @@ iu::TensorGpu_32f *StereoNet::performPrediction(iu::TensorGpu_32f *d_inputLeft, 
 		std::cout << "Elapsed time (convolutions): " << cut.elapsed() << std::endl;
 		cut.start();
 	}
-
-	ConcatStereoNet *net = dynamic_cast<ConcatStereoNet*>(this);
-	if(net)
-	{
-		// save(*net->m_d_outLeft, "/tmp/outLeft.npy");
-		d_outLeft = net->m_d_outLeft;
-		d_outRight = net->m_d_outRight;
-	}
-	else
-	{
-//		std::cout << "Cast to ConcatNet failed" << std::endl;
-	}
-
 
 	iu::TensorGpu_32f *d_commonOut;
 	std::vector<iu::TensorGpu_32f *> commonInputs { d_outLeft, d_outRight };

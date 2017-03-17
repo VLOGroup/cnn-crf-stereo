@@ -6,7 +6,6 @@
 #include "iu/iuio.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "iu/iuhelpermath.h"
-#include "graystereonet.h"
 #include "colorstereonet.h"
 
 // defines
@@ -1027,20 +1026,6 @@ void padColorImage(iu::ImageGpu_32f_C4 *out,iu::ImageGpu_32f_C4 *in, int padval)
     cudaDeviceSynchronize();
 }
 
-//iu::TensorGpu_32f *calccostvolumeCNN(iu::ImageGpu_32f_C1 *I1, iu::ImageGpu_32f_C1 *I2, float disp_min, float disp_step,
-//									 float disp_max, int numLayers, std::string paramsPath, iu::LinearDeviceMemory_32f_C1 *d_outCv)
-iu::TensorGpu_32f *calccostvolumeCNN(iu::ImageGpu_32f_C1 *I1, iu::ImageGpu_32f_C1 *I1_padded, iu::ImageGpu_32f_C1 *I2, iu::ImageGpu_32f_C1 *I2_padded,
-		GrayStereoNet *stereoNet, int padval)
-{
-    padImage(I1_padded, I1, padval);
-    padImage(I2_padded, I2, padval);
-    if(!costvolume_refinement_)
-        costvolume_refinement_ = new iu::TensorGpu_32f(1,3,I1->height(),I1->width(),iu::TensorGpu_32f::MemoryLayout::NHWC);
-
-    iu::TensorGpu_32f* d_out = stereoNet->predict(I1_padded, I2_padded);
-    return d_out;
-}
-
 iu::TensorGpu_32f *calccostvolumeColorCNN(iu::ImageGpu_32f_C4 *I1, iu::ImageGpu_32f_C4 *I1_padded, iu::ImageGpu_32f_C4 *I2, iu::ImageGpu_32f_C4 *I2_padded,
 		ColorStereoNet *stereoNet, int padval)
 {
@@ -1106,76 +1091,6 @@ void unprepareFuseTTVL1()
     cudaDestroyTextureObject(tex_u);
     cudaDestroyTextureObject(tex_p);
     cudaDestroyTextureObject(tex_q);
-}
-
-void fuseTHuberQuadFit(iu::ImageGpu_32f_C1* u, iu::ImageGpu_32f_C1* u_, iu::ImageGpu_32f_C1* u0,
-                     iu::ImageGpu_32f_C1* I1, iu::ImageGpu_32f_C1* I2, iu::ImageGpu_8u_C1 *occlusion_mask,
-                     iu::ImageGpu_32f_C1* wx_gpu, iu::ImageGpu_32f_C1* wy_gpu, iu::ImageGpu_32f_C2* qf, iu::ImageGpu_32f_C2 *p,  iu::ImageGpu_32f_C2 *q,
-                     iu::ImageGpu_32f_C1 *I1_padded, iu::ImageGpu_32f_C1 *I2_padded, int padval, GrayStereoNet *stereoNet,
-                     int filter_size, float lambda_census, float C,
-                     float disp_step, int iterations, int num_warps)
-{
-    int width = u->width();
-    int height = u->height();
-
-    int gpu_block_x = GPU_BLOCK_SIZE;
-    int gpu_block_y = GPU_BLOCK_SIZE;
-
-    // compute number of Blocks
-    int nb_x = iu::divUp(width,gpu_block_x);
-    int nb_y = iu::divUp(height,gpu_block_y);
-
-    dim3 dimBlock(gpu_block_x,gpu_block_y);
-    dim3 dimGrid(nb_x,nb_y);
-//    tvl1bounds_init_u_kernel<<<dimGrid,dimBlock,0,stream>>>(*u,*x1_gpu,*x2_gpu);
-    // init p,q
-    set_value_kernel<<<dimGrid,dimBlock,0,0>>>(make_float2(0.f,0.f),p->data(),p->width(),p->height(),p->stride());
-    set_value_kernel<<<dimGrid,dimBlock,0,0>>>(make_float2(0.f,0.f),q->data(),q->width(),q->height(),q->stride());
-
-    cudaTextureObject_t tex_I1, tex_I2;
-    bindTexture(tex_I1,I1,cudaAddressModeClamp);
-    bindTexture(tex_I2,I2,cudaAddressModeClamp);
-
-    float L = sqrt(8);
-    float tau = 1/L;
-    float sigma = 1/L;
-    // perform padding
-    if(filter_size<=0)
-        padImage(I1_padded,I1,padval);
-
-    for (int warps=0; warps<num_warps; warps++)
-    {
-        if(filter_size>0) {
-            if(occlusion_mask)
-                tvqf_warp_live_occ_kernel <<< dimGrid, dimBlock,0,0 >>> (*u, *occlusion_mask,tex_I1, tex_I2, filter_size, lambda_census, *qf,disp_step, false);
-            else
-                tvqf_warp_live_kernel <<< dimGrid, dimBlock,0,0 >>> (*u, tex_I1, tex_I2, filter_size, lambda_census, *qf,disp_step, false);
-        }
-        else {
-            warp_image_kernel <<< dimGrid, dimBlock,0,0 >>>(*u_,*u,tex_I2); // can reuse memory for u_ here to store the warped input image
-
-            // call CNN
-            padImage(I2_padded,u_,padval);
-            stereoNet->setDisparities(-disp_step*0.25,disp_step*0.25,disp_step*0.25,costvolume_refinement_);
-            iu::TensorGpu_32f *d_out = stereoNet->predict(I1_padded, I2_padded);
-            // perform fitting on CNN output
-            do_fitting_kernel<<< dimGrid, dimBlock,0,0 >>>(*qf,*d_out,disp_step,lambda_census,false);
-        }
-        iu::copy(u,u0);
-
-        for (int iters=0; iters<iterations; iters++)
-        {
-            iu::copy(u,u_);
-            cudaDeviceSynchronize();
-            ttvqf_primal_kernel<<< dimGrid, dimBlock,0,0 >>>(*u, *u_, *u0, *qf, tex_p, tex_q, tau, disp_step);
-            thuberqf_dual_kernel<<< dimGrid, dimBlock,0,0 >>>(*p, *q, *wx_gpu, *wy_gpu, tex_u_, sigma, C);
-            cudaDeviceSynchronize();
-        }
-    }
-//    iu::imsave(I2_padded,"right_warped.png",true);
-//    iu::imsave(I1_padded,"left.png",true);
-    cudaDestroyTextureObject(tex_I1);
-    cudaDestroyTextureObject(tex_I2);
 }
 
 void fuseTHuberQuadFit(iu::ImageGpu_32f_C1* u, iu::ImageGpu_32f_C1* u_, iu::ImageGpu_32f_C1* u0,

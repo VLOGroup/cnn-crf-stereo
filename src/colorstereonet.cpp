@@ -26,51 +26,36 @@ iu::TensorGpu_32f *ColorStereoNet::predict(iu::ImageGpu_32f_C4 *d_left, iu::Imag
 	}
 	else
 	{
-	// adjust inputs (contiguous memory + mem-layout)
-	int in = 1;
-	int ic = 3;
+        // adjust inputs (contiguous memory + mem-layout)
+        int in = 1;
+        int ic = 3;
 
-	iu::TensorGpu_32f  d_inputLeft(in, ic, d_left->height(), d_left->width(), iu::TensorGpu_32f::MemoryLayout::NCHW);
-	iu::TensorGpu_32f d_inputRight(in, ic, d_right->height(), d_right->width(), iu::TensorGpu_32f::MemoryLayout::NCHW);
-//
-//	auto s = d_inputLeft.ref().subdim<0>(0).subrange({0,0,0},{3,5,5});
-//	ndarray<float,3> a;
-//	a.create<memory::CPU>(s);
-//	a << s;
-//	std::cout << "s=\n" << s << "\n";
-//	print_array("a = ",a, 0);
+        iu::TensorGpu_32f  d_inputLeft(in, ic, d_left->height(), d_left->width(), iu::TensorGpu_32f::MemoryLayout::NCHW);
+        iu::TensorGpu_32f d_inputRight(in, ic, d_right->height(), d_right->width(), iu::TensorGpu_32f::MemoryLayout::NCHW);
 
-	d_inputLeft.ref().subdim<0>(0) << d_left->ref().unpack().subrange({0,0,0},{3,d_left->width(),d_left->height()}).permute_dims({0,2,1});
-	d_inputRight.ref().subdim<0>(0) << d_right->ref().unpack().subrange({0,0,0},{3,d_right->width(),d_right->height()}).permute_dims({0,2,1});
+        d_inputLeft.ref().subdim<0>(0) << d_left->ref().unpack().subrange({0,0,0},{3,d_left->width(),d_left->height()}).permute_dims({0,2,1});
+        d_inputRight.ref().subdim<0>(0) << d_right->ref().unpack().subrange({0,0,0},{3,d_right->width(),d_right->height()}).permute_dims({0,2,1});
 
-//	save(d_inputLeft, "/tmp/im0.npy");
-//	save(d_inputRight, "/tmp/im1.npy");
+        iu::IuCudaTimer cut;
+        if (m_verbose)
+            cut.start();
 
-	iu::IuCudaTimer cut;
-	if (m_verbose)
-		cut.start();
+        cuda::makeRgbZeroMean(d_inputLeft);
+        cuda::makeRgbUnitStd(d_inputLeft, true);
 
-	cuda::makeRgbZeroMean(d_inputLeft);
-	cuda::makeRgbUnitStd(d_inputLeft, true);
+        cuda::makeRgbZeroMean(d_inputRight);
+        cuda::makeRgbUnitStd(d_inputRight, true);
 
-	cuda::makeRgbZeroMean(d_inputRight);
-	cuda::makeRgbUnitStd(d_inputRight, true);
+        if (m_verbose)
+            std::cout << "Elapsed time RGB (zero mean, unit variance): " << cut.elapsed() << std::endl;
 
-	if (m_verbose)
-		std::cout << "Elapsed time RGB (zero mean, unit variance): " << cut.elapsed() << std::endl;
+        if(m_numLayers == 7 && m_pairwiseOps.size() > 0)
+        {
+            m_pwInput = new iu::TensorGpu_32f(m_in, 3, m_ih - 4, m_iw - 4, d_inputLeft.memoryLayout());
+            cuda::cropTensor(d_inputLeft, *m_pwInput, 2);
+        }
 
-	if(m_numLayers == 7 && m_pairwiseOps.size() > 0)
-	{
-		m_pwInput = new iu::TensorGpu_32f(m_in, 3, m_ih - 4, m_iw - 4, d_inputLeft.memoryLayout());
-		cuda::cropTensor(d_inputLeft, *m_pwInput, 2);
-//		save(d_inputLeft, "/tmp/im0.npy");
-//		save(*m_pwInput, "/tmp/pwin.npy");
-	}
-
-//	save(d_inputLeft, "/tmp/im0.npy");
-//	save(d_inputRight, "/tmp/im1.npy");
-
-	return performPrediction(&d_inputLeft, &d_inputRight);
+        return performPrediction(&d_inputLeft, &d_inputRight);
 	}
 }
 
@@ -97,9 +82,6 @@ iu::TensorGpu_32f *ColorStereoNet::predictXY(iu::ImageGpu_32f_C4 *d_left, iu::Im
 	cuda::makeRgbUnitStd(d_inputRight_rgb, true);
 
 	// add x- and y-position
-	//xx, yy = np.meshgrid(np.arange(im0.shape[3]), np.arange(im0.shape[2]))
-    //xx = (xx.astype('float32') - (im0.shape[3]) / 2.) / im0.shape[3]
-    //yy = (yy.astype('float32') - (im0.shape[2]) / 2.) / im0.shape[2]
 	iu::TensorCpu_32f xy_pos(in, 2, d_left->height(), d_left->width());
 	for(int y = 0; y < xy_pos.height(); ++y)
 	{
@@ -121,11 +103,6 @@ iu::TensorGpu_32f *ColorStereoNet::predictXY(iu::ImageGpu_32f_C4 *d_left, iu::Im
 	iu::TensorGpu_32f d_inputRight(in, ic + 2, d_right->height(), d_right->width(), iu::TensorGpu_32f::MemoryLayout::NCHW);
 	cuda::concatOver_c_dim(d_inputRight_rgb, d_xy_pos, d_inputRight);
 
-
-//	save(d_inputLeft, "/tmp/left.npy");
-//	save(d_inputRight, "/tmp/right.npy");
-
-
 	if (m_verbose)
 		std::cout << "Elapsed time RGB (zero mean, unit variance): " << cut.elapsed() << std::endl;
 
@@ -133,12 +110,7 @@ iu::TensorGpu_32f *ColorStereoNet::predictXY(iu::ImageGpu_32f_C4 *d_left, iu::Im
 	{
 		m_pwInput = new iu::TensorGpu_32f(m_in, 3, m_ih - 4, m_iw - 4, d_inputLeft_rgb.memoryLayout());
 		cuda::cropTensor(d_inputLeft_rgb, *m_pwInput, 2);
-//		save(d_inputLeft, "/tmp/im0.npy");
-//		save(*m_pwInput, "/tmp/pwin.npy");
 	}
-
-//	save(d_inputLeft, "/tmp/im0.npy");
-//	save(d_inputRight, "/tmp/im1.npy");
 
 	return performPrediction(&d_inputLeft, &d_inputRight);
 }
