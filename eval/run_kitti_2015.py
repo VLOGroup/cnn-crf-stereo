@@ -71,7 +71,7 @@ for image0, image1, imageid in zip(image0_names,image1_names,np.arange(1,201)):
                                      '--parameter-file', cnn_params_file,
                                      #'--refinement','QuadDirect'
                                      ]
-    #print args
+    print args
     retval = subprocess.call(' '.join(args),shell=True,cwd=os.getcwd())
     if imageid==num_images:
         break
