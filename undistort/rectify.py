@@ -3,7 +3,6 @@ from numpy.linalg import inv
 from scipy.ndimage import map_coordinates
 from scipy.optimize import least_squares, leastsq
 
-from rectify import undistort, approx_inv_undistort
 from features import compute_sift_matches
 
 def rectify_stereo_pair(im0, im1, K1, y_th, good_ratio, verbose=False):
