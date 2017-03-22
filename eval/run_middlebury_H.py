@@ -74,8 +74,8 @@ ndisp_regex = re.compile('ndisp=')
 for image in images_names:
     print os.path.basename(image)
     left = image+'/im0.png'
-    right = image+'/im1.png'
-    #right = image+'/im1_undistorted.png'
+    #right = image+'/im1.png'
+    right = image+'/im1_rectified.png'
     # read out ndisp from calib.txt
     calibfile = open(os.path.realpath(image) + '/calib.txt','r')
     for line in calibfile:
