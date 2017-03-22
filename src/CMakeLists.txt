@@ -56,7 +56,30 @@ SET(EXTERN_LIBS ${EXTERN_LIBS} ${SlackProp_DIR}/lib/libslack_prop.so)
 
 # cnpy
 # -----------------------------------------------------------------------------
+SET(CNPY_INCLUDE_DIR "" CACHE FILEPATH "Path to cnpy include")
+
+IF(NOT EXISTS /usr/local/include/cnpy.h)
+	IF(CNPY_INCLUDE_DIR STREQUAL "")
+	  MESSAGE(SEND_ERROR 
+	  "Can't find cnpy.h on system path. Install cnpy to system or set additional include directory!")
+	ENDIF()
+ENDIF()
+
+SET(CNPY_LIB_DIR "" CACHE FILEPATH "Path to cnpy lib")
+IF(NOT EXISTS /usr/local/lib/libcnpy.so)
+	IF(CNPY_LIB_DIR STREQUAL "")
+	  MESSAGE(SEND_ERROR 
+	  "Can't find libcnpy.so on system path. Install cnpy to system or set additional library directory!")
+	ENDIF()
+ENDIF()
+
+
+INCLUDE_DIRECTORIES(${CNPY_INCLUDE_DIR})
+LINK_DIRECTORIES(${CNPY_LIB_DIR})
+
 SET(EXTERN_LIBS ${EXTERN_LIBS} cnpy)
+
+
 
 ##-----------------------------------------------------------------------------
 ## Boost
