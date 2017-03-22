@@ -100,7 +100,7 @@ for image in images_names:
     #CNN + CRF output
     #print 'DO IT: -------------------------------------------------- delta =', np.ceil(delta * disp_step), 'delta=', delta, 'disp_step=', disp_step
     timed_executable = '/usr/bin/time -f ''%e'' -o '+image+'/timeJMR.txt '+executable
-    args = [executable,left,right,
+    args = [timed_executable,left,right,
             '--config-file '+config_file,
             '--output-file '+os.path.realpath(image)+'/'+output_filename,
             '--disp-step '+str(disp_step),
@@ -108,8 +108,8 @@ for image in images_names:
             '--parameter-file', cnn_params_file,
 #            '--refinement','QuadDirect'
 
-            '--L1 ' + str(L1 / 2.0 * disp_step),
-            '--L2 ' + str(L2 * 2.0 * disp_step),
+	    '--L1 ' + str(L1 / 2.0),
+	    '--L2 ' + str(L2 * 2.0),
             '--delta ' + str(np.ceil(delta))
 
             ]
