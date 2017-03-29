@@ -43,16 +43,17 @@ ini_str = '[root]\n' + open(config_file, 'r').read()
 ini_fp = StringIO.StringIO(ini_str)
 config = ConfigParser.RawConfigParser()
 config.readfp(ini_fp)
-try:
-  L1 = float(config.get('root', 'L1'))
-  L2 = float(config.get('root', 'L2'))
-  delta = float(config.get('root', 'delta'))
-except:
-  L1=0
-  L2=0
-  delta=0
-  print 'Could not find L1 or L2 or delta -> exit!'
-  sys.exit(0)
+if config.get('root', 'inference') == 'CRF':
+    try:
+        L1 = float(config.get('root', 'L1'))
+        L2 = float(config.get('root', 'L2'))
+        delta = float(config.get('root', 'delta'))
+    except:
+        L1=0
+        L2=0
+        delta=0
+        print 'Could not find L1 or L2 or delta -> exit!'
+        sys.exit(0)
 
 # create npz file from parameters
 pkl_names = glob.glob(cnn_params_folder+'/*.pkl')
