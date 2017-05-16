@@ -1,2 +1,5 @@
 build
+output
+data/kitti-2015
+data/middlebury-2014
 *.pyc

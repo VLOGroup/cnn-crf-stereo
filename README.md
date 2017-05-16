@@ -12,6 +12,13 @@ If you use this code please cite the following publication:
 }
 ~~~
 
+## Repository Structure
+The repository is structured as follows:
+  - `stereo` contains the C++/CUDA code of our CNN-CRF model -> this needs to be compiled to use our model for disparity computation
+  - `undistort` contains python code for rectifying the Middlebury images
+  - `eval` contains python code for reproducing the numbers presented in the paper
+  - `data` contains the learned model parameters
+
 ## Compiling
 For your convenience, the required libraries that are on Github are added as
 submodules. So clone this repository with `--recursive` or do a
