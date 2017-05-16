@@ -1,1 +1,0 @@
-cnn: /home/patrick/sshfs/repos/stereo-learning/output/KITTI/01_unary/7/params

@@ -1,1 +1,0 @@
-cnn: /home/patrick/PhD/development/git/stereo-learning/output/KITTI/01_unary/3/cont/cont/cont/params

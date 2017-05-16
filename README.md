@@ -1,4 +1,4 @@
-# Hybrid CNN-CRF Stereo Model
+# Hybrid CNN-CRF Stereo 
 This repository provides software for our publication "End-to-End Training of Hybrid CNN-CRF Models 
 for Stereo", which is going to be presented at CVPR 2017.
 
@@ -100,3 +100,29 @@ directory. You can compute the disparity map using
 ~~~
 ./stereo_img TODO: parameters
 ~~~
+
+### Reproduce the numbers in the paper
+* install opencv for python
+* rectify train/test images using the provided script
+
+~~~
+cd undistort
+python main.py <path/to/middlebury/>{training, test}H/
+~~~
+
+This command will warp `im1` such that corresponding pixels are located in the same row. The 
+rectified images are saved as `im1_rectified.png` in the appropriate folder.
+
+* run the provided evaluation script
+
+~~~
+cd ../eval
+python run_middlebury_H.py ../data/middlebury-2014/EvaluationScripts/trainingH/ ../build blub!! ../data/parameters/middlebury/7-layer-H/ JMR_NEU
+~~~
+
+This will 
+
+* run evaluation script to get numbers
+
+
+TODO: correct Cmake to compile automatically in Release mode
