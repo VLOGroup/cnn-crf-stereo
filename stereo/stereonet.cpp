@@ -184,7 +184,6 @@ void StereoNet::initNet(float min_disp, float max_disp, float step, int rect_cor
 void StereoNet::setAllParams(std::string npzPath)
 {
 	assert(m_leftOps.size() == m_rightOps.size());
-
 //	m_verbose=true;
 
 	// load from npz array

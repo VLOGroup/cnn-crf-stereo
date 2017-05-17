@@ -105,7 +105,7 @@ void Convolution::initialize(iu::TensorGpu_32f *d_out, int pad_x, int pad_y)
 {
 	// convolution settings
 	cudnnSafeCall(cudnnCreateConvolutionDescriptor(&m_convDesc));
-	cudnnSafeCall(cudnnSetConvolution2dDescriptor(m_convDesc, pad_y, pad_x, 1, 1, 1, 1, m_convMode));
+	cudnnSafeCall(cudnnSetConvolution2dDescriptor(m_convDesc, pad_y, pad_x, 1, 1, 1, 1, m_convMode, CUDNN_DATA_FLOAT));
 
 	allocateOutputMemory(d_out);
 

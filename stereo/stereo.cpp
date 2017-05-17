@@ -189,7 +189,9 @@ void Stereo::computeVolume(bool lr)
         struct stat buffer;
         if(stat (params_name.c_str(), &buffer) != 0)
         {
-            params_name = cnn_parameter_file_base_name_ + std::to_string(num_cnn_layers_) + ".npz";
+            // params_name = cnn_parameter_file_base_name_ + std::to_string(num_cnn_layers_) + ".npz";
+            params_name = cnn_parameter_file_base_name_ + ".npz";
+            
         }
 
 		// init stereo net (LAZY!)

@@ -4,23 +4,42 @@ from os import listdir, chdir, getcwd
 from os.path import join
 import numpy as np
 import re
+import sys
 np.set_printoptions(precision=2)
 
-methods = ['CNN3', 'CNN3CRF', 'CNN3CRFJOINT', 'CNN3CRFFULL',
-           'CNN7', 'CNN7CRF', 'CNN7CRFJOINT', 'CNN7CRFFULL']
+resolution = 'Q'
+if len(sys.argv) == 2:
+    resolution = sys.argv[1]
+
+if resolution == 'Q':
+    methods = ['CNN3', 'CNN3CRF', 'CNN3CRFJOINT', 'CNN3CRFFULL',
+               'CNN7', 'CNN7CRF', 'CNN7CRFJOINT', 'CNN7CRFFULL']
+elif resolution == 'H':
+    methods = ['CNN3', 'CNN3CRF', 'CNN3CRFJOINT', 'CNN3CRFFULL',
+               'CNN7', 'CNN7CRF', 'CNN7CRFJOINT', 'CNN7CRFFULL',
+               'JMR']
+else:
+    print 'Error: only resolutions Q and H are supported'
+    sys.exit(-1)
+
 
 # save working directory
 cwd = getcwd()
 
 # change cwd to 
-chdir(join(cwd, 'data/middlebury'))
+chdir(join(cwd, '../data/middlebury-2014/MiddEval3'))
 
 weights = np.array([1, 1, 1, 1, 1, 1, 0.5, 1, 0.5, 0.5, 1, 1, 0.5, 1, 0.5])
 results = {}
 for method in methods:
-    #print 'Compute results for', method, '...'
-    #res = subprocess.call(['./runevalF', '-b', "Q", "all", "4.0", method]
-    p = Popen(['./runevalF', '-b', "Q", "all", "4.0", method], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    print 'Compute results for', method, '...'
+    #p = Popen(['./runevalF', method], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    if resolution == 'Q':
+        error_th = '4.0'
+    elif resolution == 'H':
+        error_th = '2.0'
+    print resolution, error_th
+    p = Popen(['./runevalF', '-b', resolution, 'training', error_th, method], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     output, err = p.communicate()
     return_code = p.returncode
     

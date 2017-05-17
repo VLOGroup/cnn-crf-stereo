@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         ("disp-min", po::value<double>()->default_value(1),"Minimum disparity")
         ("disp-step", po::value<double>()->default_value(1),"Disparity step")
         ("disp-max", po::value<double>()->default_value(128),"Maximum disparity")
-        ("matching", po::value<std::string>()->default_value("CENSUS"), "Matching method. Possible options: CENSUS, COLORCNN, GRAYCNN, CONCATCNN, COLORPAIR, LOAD")
+        ("matching", po::value<std::string>()->default_value("CENSUS"), "Matching method. Possible options: CENSUS, COLORCNN, COLORPAIR, LOAD")
         ("volume", po::value<std::string>()->default_value(""), "Volume file when matching method is set to LOAD")
         ("inference", po::value<std::string>()->default_value("CRF"), "Inference method. Possible options: CRF, ARGMAX, NONE")
         ("refinement", po::value<std::string>()->default_value("NONE"), "Continuous refinement. Possible options: NONE, THuberQuad, QuadDirect")
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
     bool with_xy = vm["with-xy"].as<bool>();
 
 	Stereo stereo;
-  stereo.setAllowCnnGc(true);
+    stereo.setAllowCnnGc(true);
 	stereo.setWithXy(with_xy);
 
 	iu::ImageCpu_32f_C4 *I1 = iu::imread_32f_C4(fname_I1);
@@ -148,33 +148,11 @@ int main(int argc, char *argv[])
             stereo.setParameterFile(fname_params);
             stereo.setMatchingFunction(COLORCNN);
             break;
-        case str2int("CONCATCNN"):
-			stereo.setNumLayers(num_layers);
-			stereo.setParameterFile(fname_params);
-			stereo.setMatchingFunction(CONCATCNN);
-			break;
-        case str2int("GRAYCNN"):
-			stereo.setNumLayers(num_layers);
-			stereo.setParameterFile(fname_params);
-			stereo.setMatchingFunction(GRAYCNN);
-			break;
-        case str2int("GRAYPAIR"):
-            alpha = 0.f; // to ignore the edge term
-            stereo.setNumLayers(num_layers);
-            stereo.setParameterFile(fname_params);
-            stereo.setMatchingFunction(GRAYCNN_PAIRWISE);
-            break;
         case str2int("COLORPAIR"):
 			alpha = 0.f; // to ignore the edge term
 			stereo.setNumLayers(num_layers);
 			stereo.setParameterFile(fname_params);
 			stereo.setMatchingFunction(COLORCNN_PAIRWISE);
-			break;
-        case str2int("CONCATPAIR"):
-			alpha = 0.f; // to ignore the edge term
-			stereo.setNumLayers(num_layers);
-			stereo.setParameterFile(fname_params);
-			stereo.setMatchingFunction(GRAYCNN_PAIRWISE);
 			break;
         case str2int("CENSUS"):
             stereo.setMatchingFunction(CENSUS);

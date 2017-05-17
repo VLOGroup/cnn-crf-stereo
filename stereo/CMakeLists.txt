@@ -49,7 +49,8 @@ include(../cmake/compiler_settings.cmake.txt)
 
 # SlackProp
 #------------------------------------------------------------------------------
-SET(SlackProp_DIR $ENV{SLACKPROP_ROOT})
+#SET(SlackProp_DIR $ENV{SLACKPROP_ROOT})
+SET(SlackProp_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/slackprop)
 INCLUDE_DIRECTORIES(${SlackProp_DIR}/src)
 
 SET(EXTERN_LIBS ${EXTERN_LIBS} ${SlackProp_DIR}/lib/libslack_prop.so)

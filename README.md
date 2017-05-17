@@ -45,6 +45,7 @@ This software requies:
  - ImageUtilities (https://github.com/VLOGroup/imageutilities) with the `iuio` and `iumath` modules
  - SlackProp (https://github.com/VLOGroup/slackprop)
  - cnpy (https://github.com/rogersce/cnpy)
+ - cudnn 6.x (https://developer.nvidia.com/cudnn)
 
 #### Image Utilities
 Compile and install imageutilities: Follow the instructions on 
@@ -72,17 +73,16 @@ mkdir build
 cd build
 cmake ..
 make 
-(sudo) make install
 cd ../../
 ~~~
 
-Additionally you must set the environment variable `SLACKPROP_ROOT` to point to the slackprop 
+<!---Additionally you must set the environment variable `SLACKPROP_ROOT` to point to the slackprop 
 folder using
 
 ~~~
 export SLACKPROP_ROOT=path/to/slackprop/
 ~~~
-
+--->
 ### Stereo-Net
 At this point you should have compiled all the dependencies successfully. Please also double-check 
 you have set the environment variables `IMAGEUTILITIES_ROOT` and `SLACKPROP_ROOT` correctly.
@@ -91,7 +91,7 @@ Compiling our stereo model:
 ~~~
 mkdir build
 cd build
-cmake ../src
+cmake ../stereo
 make
 ~~~
 
@@ -102,34 +102,85 @@ directory. The following simple test will print the usage information
 ~~~
 
 ## Usage
+We expect the following structure of the data directory:
+~~~
+data/kitti-2015/training/
+data/kitti-2015/testing/
+data/middlebury-2014/
+~~~
+
 In order to demonstrate the usage of our code we put a rectified stereo-pair into the data
 directory. You can compute the disparity map using
 ~~~
-./stereo_img TODO: parameters
+./stereo_img --im0 ../data/im0.png --im1 ../data/im1.png
+~~~
+if you have some input images. Otherwise, download the Middlebury data as described below. Then you can 
+test the algorithm using
+~~~
+./stereo_img --im0 ../data/middlebury-2014/MiddEval3/trainingQ/Adirondack/im0.png  --im1 ../data/middlebury-2014/MiddEval3/trainingQ/Adirondack/im1.png --parameter-file ../data/parameters/middlebury-2014/7-layer/cnn+crf+full/params --config-file ../data/parameters/middlebury-2014/7-layer/cnn+crf+full/config_mb_cnn7_crf_full.cfg
 ~~~
 
 ### Reproduce the numbers in the paper
-* install opencv for python
-* rectify train/test images using the provided script
+First you must download the data from the respective benchmark and then you can use the provided 
+evaluation scripts to reproduce the numbers in the paper.
 
+#### Middlebury Stereo Evaluation - Version 3 
+1) Download the Middlebury 2014 data from (http://vision.middlebury.edu/stereo/submit3/). You will 
+will need `Input Data` as well as `Ground truth for left view` for quarter (Q), half (H) and full (F) resolution. 
+2) Download the Middlebury evaluation SDK (http://vision.middlebury.edu/stereo/submit3/zip/MiddEval3-SDK-1.6.zip)
+3) Extract all downloaded files to the `data` folder. 
+Your data folder should look like 
+~~~
+data/
+|--- MiddEval3/
+    |--- trainingQ/
+    |--- trainingH/
+    |--- testQ/
+    |--- testH/
+    |--- runevalF
+    |--- ...
+~~~
+4) Compile the Middlebury evaluation SDK like described in http://vision.middlebury.edu/stereo/submit3/zip/MiddEval3/README.txt
+4) Install opencv for python
+5) Rectify train/test images using the provided script
 ~~~
 cd undistort
-python main.py <path/to/middlebury/>{training, test}H/
+python main.py ../data/middlebury-2014/MiddEval3/trainingH/
+python main.py ../data/middlebury-2014/MiddEval3/testH/
 ~~~
 
 This command will warp `im1` such that corresponding pixels are located in the same row. The 
 rectified images are saved as `im1_rectified.png` in the appropriate folder.
 
-* run the provided evaluation script
-
+6) Compute results for Middlebury
 ~~~
-cd ../eval
-python run_middlebury_H.py ../data/middlebury-2014/EvaluationScripts/trainingH/ ../build blub!! ../data/parameters/middlebury/7-layer-H/ JMR_NEU
+cd eval
+./run_all_middlebury.sh
 ~~~
 
-This will 
+7) Compute Errors
+~~~
+python compute_numbers_middlebury.py
+~~~
 
-* run evaluation script to get numbers
+#### Kitti Stereo Evaluation 2015
+1) Download the Kitti 2015 data from (http://www.cvlibs.net/download.php?file=data_scene_flow.zip). 
+2) Make a folder `kitti-2015` in the `data` folder and extract all downloaded files there
+Your data folder should look like
+~~~
+data/
+|--- kitti-2015
+    |--- testing/
+    |--- training/
+~~~
 
+3) Compute results for Kitti
+~~~
+cd eval
+./run_all_kitti_2015.sh
+~~~
 
-TODO: correct Cmake to compile automatically in Release mode
+4) Compute Errors
+~~~
+python compute_numbers_kitti.py
+~~~

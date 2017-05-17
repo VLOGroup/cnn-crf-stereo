@@ -16,17 +16,15 @@ def computeError(prediction, gt, tau):
     error = wrong_elems.sum() / np.sum(gt[gt > 0].shape).astype('float64')
     return error
 
-# methods = ['CNN3', 'CNN3CRF', 'CNN3CRFJOINT', 'CNN3CRFFULL',
-#            'CNN7', 'CNN7CRF', 'CNN7CRFJOINT', 'CNN7CRFFULL']
-methods = ['CNN3', 'CNN7', 'MBCNN3_on_Kitti', 'MBCNN7_on_Kitti',
-           'MBCNNCRFJ3_on_Kitti', 'MBCNNCRFJ7_on_Kitti']
-
+methods = ['CNN3', 'CNN3CRF', 'CNN3CRFJOINT', 'CNN3CRFFULL',
+           'CNN7', 'CNN7CRF', 'CNN7CRFJOINT', 'CNN7CRFFULL']
+           
 error_px = 3
 error_percent = 0.05
 
 results = {}
 for method in methods:
-    src_dir = join('../data/out/kitti2015/', method)
+    src_dir = join('../output/kitti-2015/', method)
     if not exists(src_dir):
         results[method] = np.array([-1, -1])
         continue
@@ -54,7 +52,7 @@ for method in methods:
     results[method] = np.array([np.asarray(percent_bad_occ).mean(), 
                                 np.asarray(percent_bad_noc).mean()])
 
-        
+print "{0: <13} {1}".format('Method', '     All    Non-Occluded')        
 for method in methods:
     print "{0: <13} {1}".format(method, results[method])
 
