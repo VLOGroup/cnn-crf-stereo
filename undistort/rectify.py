@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.linalg import inv
 from scipy.ndimage import map_coordinates
-from scipy.optimize import least_squares, leastsq
+from scipy.optimize import least_squares
 
 from features import compute_sift_matches
 
