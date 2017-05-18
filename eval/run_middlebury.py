@@ -63,7 +63,7 @@ for image in images_names:
 
     #CNN + CRF output
     timed_executable = '/usr/bin/time -f ''%e'' -o '+image+'/timeJMR.txt '+executable
-    args = [timed_executable,left,right,
+    args = [executable,left,right,
             '--config-file '+config_file,
             '--output-file '+os.path.realpath(image)+'/'+output_filename,
             '--disp-step '+str(disp_step),

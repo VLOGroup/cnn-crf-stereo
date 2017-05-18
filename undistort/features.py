@@ -13,7 +13,10 @@ def compute_sift_matches(im0g, im1g, y_th=3, good_ratio=0.75, verbose=False):
     :return: the sorted good matches (based on response)
     """
 
-    sift = cv2.xfeatures2d.SIFT_create(nOctaveLayers=7)
+    if int(cv2.__version__.split('.')[0])<3:
+        sift = cv2.SIFT(nOctaveLayers=7)
+    else:
+        sift = cv2.xfeatures2d.SIFT_create(nOctaveLayers=7)
 
     kp0, des0 = sift.detectAndCompute(im0g, None)
     kp1, des1 = sift.detectAndCompute(im1g, None)
