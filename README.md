@@ -29,7 +29,7 @@ after cloning. All dependencies will be located in the dependency folder like
 ~~~
 dependencies/cnpy
 dependencies/imageutilities
-dependencies/slackprop
+dependencies/slack-prop
 ~~~
 
 <!---If you are already using some projects from our group, 
@@ -60,7 +60,7 @@ cd dependencies/cnpy
 mkdir build
 cd build
 cmake ..
-make
+(sudo) make install
 cd ../../
 ~~~
 More information can be found at https://github.com/rogersce/cnpy. 
@@ -68,7 +68,7 @@ More information can be found at https://github.com/rogersce/cnpy.
 #### SlackProp
 Compile SlackProp using the following commands:
 ~~~
-cd dependencies/slackprop
+cd dependencies/slack-prop
 mkdir build
 cd build
 cmake ..
@@ -102,47 +102,55 @@ directory. The following simple test will print the usage information
 ~~~
 
 ## Usage
-We expect the following structure of the data directory:
-~~~
-data/kitti-2015/training/
-data/kitti-2015/testing/
-data/middlebury-2014/
-~~~
-
 In order to demonstrate the usage of our code we put a rectified stereo-pair into the data
 directory. You can compute the disparity map using
 ~~~
 ./stereo_img --im0 ../data/im0.png --im1 ../data/im1.png
 ~~~
-if you have some input images. Otherwise, download the Middlebury data as described below. Then you can 
+This will create a file called `output.png` in the same directory.
+Otherwise, download the Middlebury data as described below. Then you can 
 test the algorithm using
 ~~~
 ./stereo_img --im0 ../data/middlebury-2014/MiddEval3/trainingQ/Adirondack/im0.png  --im1 ../data/middlebury-2014/MiddEval3/trainingQ/Adirondack/im1.png --parameter-file ../data/parameters/middlebury-2014/7-layer/cnn+crf+full/params --config-file ../data/parameters/middlebury-2014/7-layer/cnn+crf+full/config_mb_cnn7_crf_full.cfg
 ~~~
 
 ### Reproduce the numbers in the paper
+#### Dependencies
+* OpenCV >= 3.0 (https://github.com/opencv/opencv) with python bindings 
+* OpenCV contribution package `xfeatures2d` (https://github.com/opencv/opencv_contrib) with python bindings
+* scipy >= 0.17 
+* The C-Shell csh
+
+#### Datasets
 First you must download the data from the respective benchmark and then you can use the provided 
 evaluation scripts to reproduce the numbers in the paper.
 
+Create the two directories `middlebury-2014` and `kitti-2015` in the `data` directory, such that the
+structure of the data directory is
+~~~
+data/kitti-2015/
+data/middlebury-2014/
+~~~
+
 #### Middlebury Stereo Evaluation - Version 3 
-1) Download the Middlebury 2014 data from (http://vision.middlebury.edu/stereo/submit3/). You will 
+1. Download the Middlebury 2014 data from (http://vision.middlebury.edu/stereo/submit3/). You will 
 will need `Input Data` as well as `Ground truth for left view` for quarter (Q), half (H) and full (F) resolution. 
-2) Download the Middlebury evaluation SDK (http://vision.middlebury.edu/stereo/submit3/zip/MiddEval3-SDK-1.6.zip)
-3) Extract all downloaded files to the `data` folder. 
+2. Download the Middlebury evaluation SDK (http://vision.middlebury.edu/stereo/submit3/zip/MiddEval3-SDK-1.6.zip)
+3. Extract all downloaded files to the `data` folder. 
 Your data folder should look like 
 ~~~
 data/
-|--- MiddEval3/
-    |--- trainingQ/
-    |--- trainingH/
-    |--- testQ/
-    |--- testH/
-    |--- runevalF
-    |--- ...
+|--- middlebury-2014/
+    |--- MiddEval3/
+        |--- trainingQ/
+        |--- trainingH/
+        |--- testQ/
+        |--- testH/
+        |--- runevalF
+        |--- ...
 ~~~
-4) Compile the Middlebury evaluation SDK like described in http://vision.middlebury.edu/stereo/submit3/zip/MiddEval3/README.txt
-5) Install OpenCV < 3.0 (https://github.com/opencv/opencv) and the OpenCV contribution package `xfeatures2d` (https://github.com/opencv/opencv_contrib) with python bindings. 
-6) Rectify train/test images using the provided script
+4. Compile the Middlebury evaluation SDK like described in http://vision.middlebury.edu/stereo/submit3/zip/MiddEval3/README.txt
+5. Rectify train/test images using the provided script
 ~~~
 cd undistort
 python main.py ../data/middlebury-2014/MiddEval3/trainingH/
@@ -152,20 +160,20 @@ python main.py ../data/middlebury-2014/MiddEval3/testH/
 This command will warp `im1` such that corresponding pixels are located in the same row. The 
 rectified images are saved as `im1_rectified.png` in the appropriate folder.
 
-7) Compute results for Middlebury
+6. Compute results for Middlebury
 ~~~
 cd eval
 ./run_all_middlebury.sh
 ~~~
 
-8) Compute Errors
+7. Compute Errors
 ~~~
 python compute_numbers_middlebury.py
 ~~~
 
 #### Kitti Stereo Evaluation 2015
-1) Download the Kitti 2015 data from (http://www.cvlibs.net/download.php?file=data_scene_flow.zip). 
-2) Make a folder `kitti-2015` in the `data` folder and extract all downloaded files there
+1. Download the Kitti 2015 data from (http://www.cvlibs.net/download.php?file=data_scene_flow.zip). 
+2. Make a folder `kitti-2015` in the `data` folder and extract all downloaded files there
 Your data folder should look like
 ~~~
 data/
@@ -174,13 +182,13 @@ data/
     |--- training/
 ~~~
 
-3) Compute results for Kitti
+3. Compute results for Kitti
 ~~~
 cd eval
 ./run_all_kitti_2015.sh
 ~~~
 
-4) Compute Errors
+4. Compute Errors
 ~~~
 python compute_numbers_kitti.py
 ~~~
