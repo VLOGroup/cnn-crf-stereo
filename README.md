@@ -141,8 +141,8 @@ data/
     |--- ...
 ~~~
 4) Compile the Middlebury evaluation SDK like described in http://vision.middlebury.edu/stereo/submit3/zip/MiddEval3/README.txt
-4) Install opencv for python
-5) Rectify train/test images using the provided script
+5) Install OpenCV < 3.0 (https://github.com/opencv/opencv) and the OpenCV contribution package `xfeatures2d` (https://github.com/opencv/opencv_contrib) with python bindings. 
+6) Rectify train/test images using the provided script
 ~~~
 cd undistort
 python main.py ../data/middlebury-2014/MiddEval3/trainingH/
@@ -152,13 +152,13 @@ python main.py ../data/middlebury-2014/MiddEval3/testH/
 This command will warp `im1` such that corresponding pixels are located in the same row. The 
 rectified images are saved as `im1_rectified.png` in the appropriate folder.
 
-6) Compute results for Middlebury
+7) Compute results for Middlebury
 ~~~
 cd eval
 ./run_all_middlebury.sh
 ~~~
 
-7) Compute Errors
+8) Compute Errors
 ~~~
 python compute_numbers_middlebury.py
 ~~~
