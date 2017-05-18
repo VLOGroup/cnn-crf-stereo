@@ -29,7 +29,7 @@ after cloning. All dependencies will be located in the dependency folder like
 ~~~
 dependencies/cnpy
 dependencies/imageutilities
-dependencies/slack-prop
+dependencies/slackprop
 ~~~
 
 <!---If you are already using some projects from our group, 
@@ -68,7 +68,7 @@ More information can be found at https://github.com/rogersce/cnpy.
 #### SlackProp
 Compile SlackProp using the following commands:
 ~~~
-cd dependencies/slack-prop
+cd dependencies/slackprop
 mkdir build
 cd build
 cmake ..

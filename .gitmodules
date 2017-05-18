@@ -4,3 +4,6 @@
 [submodule "dependencies/imageutilities"]
 	path = dependencies/imageutilities
 	url = https://github.com/VLOGroup/imageutilities.git
+[submodule "dependencies/slackprop"]
+	path = dependencies/slackprop
+	url = git@github.com:VLOGroup/slackprop.git
