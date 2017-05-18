@@ -85,7 +85,7 @@ export SLACKPROP_ROOT=path/to/slackprop/
 --->
 ### Stereo-Net
 At this point you should have compiled all the dependencies successfully. Please also double-check 
-you have set the environment variables `IMAGEUTILITIES_ROOT` and `SLACKPROP_ROOT` correctly.
+you have set the environment variable `IMAGEUTILITIES_ROOT` correctly.
 
 Compiling our stereo model:
 ~~~
