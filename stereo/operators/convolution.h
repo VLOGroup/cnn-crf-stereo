@@ -4,7 +4,7 @@
 // Institute for Computer Graphics and Vision, Graz University of Technology
 // https://www.tugraz.at/institute/icg/teams/team-pock/
 //
-// dvs-panotracking is free software: you can redistribute it and/or modify it under the
+// cnn-crf-stereo is free software: you can redistribute it and/or modify it under the
 // terms of the GNU Affero General Public License as published by the Free Software
 // Foundation, either version 3 of the License, or any later version.
 //
